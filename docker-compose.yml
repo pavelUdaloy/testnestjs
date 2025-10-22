@@ -18,8 +18,8 @@ services:
     volumes:
       - ./database-volume:/var/lib/postgresql/data:rw
 
-  node-runner:
-    container_name: node-runner
+  app:
+    container_name: app
     image: node:22.14.0-alpine
     working_dir: /home/node/app
     env_file:
@@ -36,6 +36,27 @@ services:
     volumes:
       - ./:/home/node/app
       - ./node_modules:/home/node/app/node_modules
+    ports:
+      - "3000:3000"
     tmpfs:
       - /var/lib/postgresql/data
-    command: sh -c "npm ci && npm run build && npm run test:e2e --runInBand"
+    command: sh -c "npm ci && npm run build && npm run start:dev"
+
+  node-runner:
+    container_name: node-runner
+    image: node:22.14.0-alpine
+    working_dir: /home/node/app
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: postgres
+    depends_on:
+      - app
+    volumes:
+      - ./:/home/node/app
+      - ./node_modules:/home/node/app/node_modules
+    command: sh -c "npm run test:e2e --runInBand"

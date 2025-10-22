@@ -1,0 +1,14 @@
+{
+  "name": "campaign-k6-tests",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc",
+    "load": "docker-compose -f docker-compose.k6.yml up",
+    "stress": "docker-compose -f docker-compose-stress.k6.yml up"
+  },
+  "devDependencies": {
+    "@types/k6": "^0.47.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0"
+  }
+}
