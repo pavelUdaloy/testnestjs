@@ -59,4 +59,4 @@ services:
     volumes:
       - ./:/home/node/app
       - ./node_modules:/home/node/app/node_modules
-    command: sh -c "npm run test:e2e --runInBand"
+    command: sh -c "npm ci && npm run build && npm run test:e2e --runInBand"
