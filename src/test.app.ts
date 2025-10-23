@@ -13,12 +13,6 @@ export class TestApp {
     return this._application;
   }
 
-  public async databaseTeardown(dataSource: DataSource) {
-    const manager = dataSource.manager;
-
-    await manager.query(`SELECT truncate_schema('public');`);
-  }
-
   public static async beforeAll(): Promise<TestApp> {
     const appTestingModule = await Test.createTestingModule({
       imports: [
