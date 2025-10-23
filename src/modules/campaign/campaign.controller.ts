@@ -2,7 +2,7 @@ import { Controller, Post, Body, Param, Get, HttpStatus, HttpCode, ParseUUIDPipe
 
 import { CampaignService } from './campaign.service';
 import { RedeemVoucherRequestDto, CreateCampaignRequestDto } from './request-dto';
-import { GetCampaignResponseDto, CreateCampaignResponseDto, CreateRedeemVoucherRequestDto } from './response-dto';
+import { CampaignResponseDto, CreateRedeemVoucherRequestDto } from './response-dto';
 
 @Controller('campaigns')
 export class CampaignController {
@@ -10,23 +10,25 @@ export class CampaignController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  async createCampaign(@Body() dto: CreateCampaignRequestDto): Promise<CreateCampaignResponseDto> {
+  async createCampaign(@Body() dto: CreateCampaignRequestDto) {
     const result = await this.campaignService.createCampaign(dto);
 
-    return new CreateCampaignResponseDto(result);
+    return new CampaignResponseDto(result);
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async getCampaign(@Param('id', new ParseUUIDPipe()) id: string): Promise<GetCampaignResponseDto> {
+  async getCampaign(@Param('id', new ParseUUIDPipe()) id: string) {
     const result = await this.campaignService.getCampaign(id);
 
-    return new GetCampaignResponseDto(result);
+    return new CampaignResponseDto(result);
   }
 
   @Post(':id/redeem')
   @HttpCode(HttpStatus.OK)
-  async redeemVoucher(@Param('id', new ParseUUIDPipe()) id: string, @Body() dto: RedeemVoucherRequestDto): Promise<CreateRedeemVoucherRequestDto> {
-    return this.campaignService.redeemVoucher(id, dto);
+  async redeemVoucher(@Param('id', new ParseUUIDPipe()) id: string, @Body() dto: RedeemVoucherRequestDto) {
+    const result = await this.campaignService.redeemVoucher(id, dto);
+
+    return new CreateRedeemVoucherRequestDto(result);
   }
 }

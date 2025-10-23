@@ -22,7 +22,9 @@
     "migration:up": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d ./ormconfig.ts",
     "migration:down": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d ./ormconfig.ts",
     "migration:generate": "npx rimraf ./dist && npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d ./ormconfig.ts",
-    "migration:check": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d ./ormconfig.ts"
+    "migration:check": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d ./ormconfig.ts",
+    "load:500": "docker run --rm --add-host=host.docker.internal:host-gateway -v $(pwd)/k6:/scripts grafana/k6 run /scripts/campaign-load-test.js",
+    "load:500:windows": "docker run --rm --add-host=host.docker.internal:host-gateway -v %cd%/k6:/scripts grafana/k6 run /scripts/campaign-load-test.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

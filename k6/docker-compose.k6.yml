@@ -1,8 +1,0 @@
-version: '3.8'
-services:
-  k6:
-    image: grafana/k6:latest
-    volumes:
-      - ./dist:/scripts
-    command: run --vus 10 --duration 30s /scripts/campaign-load-test.js
-    network_mode: "host"

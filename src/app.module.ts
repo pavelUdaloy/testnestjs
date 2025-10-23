@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { config } from 'dotenv';
 
 import { TypeormEntitiesModule } from './core';
 import { CampaignModule } from './modules/campaign/campaign.module';
+
+config();
 
 @Module({
   imports: [
@@ -19,7 +22,7 @@ import { CampaignModule } from './modules/campaign/campaign.module';
           ssl: false,
           synchronize: false,
           type: 'postgres',
-          username: process.env.POSTGRES_USER,
+          username: process.env.POSTGRES_USERNAME,
         };
       },
     }),

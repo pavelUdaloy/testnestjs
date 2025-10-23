@@ -1,13 +1,12 @@
+import { CampaignEntity, CampaignVoucherRedeemEntity } from '@app-entities';
 import { HttpStatus } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import request from 'supertest';
 import { Repository } from 'typeorm';
 
-import { CampaignEntity, CampaignVoucherRedeemEntity } from '@app-entities';
-
 import { TestApp } from '../../../test.app';
-import { CreateCampaignRequestDto } from '../request-dto/create-campaign.request-dto';
 import { RedeemVoucherStatus } from '../campaign.service';
+import { CreateCampaignRequestDto } from '../request-dto';
 
 describe('CampaignController (e2e)', () => {
   let testApp: TestApp;
@@ -16,11 +15,10 @@ describe('CampaignController (e2e)', () => {
 
   beforeAll(async () => {
     testApp = await TestApp.beforeAll();
+
     campaignRepo = testApp.application.get(getRepositoryToken(CampaignEntity));
     redeemRepo = testApp.application.get(getRepositoryToken(CampaignVoucherRedeemEntity));
-  });
 
-  beforeEach(async () => {
     await redeemRepo.deleteAll();
     await campaignRepo.deleteAll();
   });
@@ -29,15 +27,11 @@ describe('CampaignController (e2e)', () => {
     await testApp.afterAll();
   });
 
-  const post = (url: string, body?: any) => request(testApp.application.getHttpServer()).post(url).send(body);
-
-  const get = (url: string) => request(testApp.application.getHttpServer()).get(url);
-
   describe('POST /campaigns', () => {
     it('should create a campaign successfully', async () => {
       const dto: CreateCampaignRequestDto = { name: 'Black Friday 2025', total: 10 };
 
-      const res = await post('/campaigns', dto).expect(HttpStatus.OK);
+      const res = await request(testApp.application.getHttpServer()).post('/campaigns').send(dto).expect(HttpStatus.OK);
 
       expect(res.body).toMatchObject({
         name: 'Black Friday 2025',
@@ -60,7 +54,7 @@ describe('CampaignController (e2e)', () => {
         redeemed: 2,
       });
 
-      const res = await get(`/campaigns/${campaign.id}`).expect(HttpStatus.OK);
+      const res = await request(testApp.application.getHttpServer()).get(`/campaigns/${campaign.id}`).expect(HttpStatus.OK);
 
       expect(res.body).toEqual({
         id: campaign.id,
@@ -77,9 +71,9 @@ describe('CampaignController (e2e)', () => {
       const campaign = await campaignRepo.save({ name: 'Redeem Test', total: 3, redeemed: 0 });
       const body = { userId: crypto.randomUUID(), idempotencyKey: crypto.randomUUID() };
 
-      const res = await post(`/campaigns/${campaign.id}/redeem`, body);
+      const res = await request(testApp.application.getHttpServer()).post(`/campaigns/${campaign.id}/redeem`).send(body);
 
-      expect(res.body.status).toBe('REDEEMED');
+      expect(res.body.status).toBe(RedeemVoucherStatus.REDEEMED);
 
       const updated = await campaignRepo.findOneBy({ id: campaign.id });
 
@@ -91,11 +85,17 @@ describe('CampaignController (e2e)', () => {
 
       const userUuid = crypto.randomUUID();
 
-      await post(`/campaigns/${campaign.id}/redeem`, { userId: userUuid, idempotencyKey: crypto.randomUUID() }).expect(HttpStatus.OK);
+      await request(testApp.application.getHttpServer())
+        .post(`/campaigns/${campaign.id}/redeem`)
+        .send({ userId: userUuid, idempotencyKey: crypto.randomUUID() })
+        .expect(HttpStatus.OK);
 
-      const res = await post(`/campaigns/${campaign.id}/redeem`, { userId: userUuid, idempotencyKey: crypto.randomUUID() }).expect(HttpStatus.OK);
+      const res = await request(testApp.application.getHttpServer())
+        .post(`/campaigns/${campaign.id}/redeem`)
+        .send({ userId: userUuid, idempotencyKey: crypto.randomUUID() })
+        .expect(HttpStatus.OK);
 
-      expect(res.body.status).toBe('ALREADY_REDEEMED');
+      expect(res.body.status).toBe(RedeemVoucherStatus.ALREADY_REDEEMED);
     });
 
     it(`should return ${RedeemVoucherStatus.REDEEMED} for idempotent retry with same key`, async () => {
@@ -103,20 +103,21 @@ describe('CampaignController (e2e)', () => {
       const idempotencyKey = crypto.randomUUID();
 
       const body = { userId: crypto.randomUUID(), idempotencyKey };
-      const first = await post(`/campaigns/${campaign.id}/redeem`, body).expect(HttpStatus.OK);
-      const second = await post(`/campaigns/${campaign.id}/redeem`, body).expect(HttpStatus.OK);
+      const first = await request(testApp.application.getHttpServer()).post(`/campaigns/${campaign.id}/redeem`).send(body).expect(HttpStatus.OK);
+      const second = await request(testApp.application.getHttpServer()).post(`/campaigns/${campaign.id}/redeem`).send(body).expect(HttpStatus.OK);
 
-      expect(first.body.status).toBe('REDEEMED');
-      expect(second.body.status).toBe('REDEEMED');
+      expect(first.body.status).toBe(RedeemVoucherStatus.REDEEMED);
+      expect(second.body.status).toBe(RedeemVoucherStatus.REDEEMED);
     });
 
     it(`should return ${RedeemVoucherStatus.SOLD_OUT} when vouchers exhausted`, async () => {
       const campaign = await campaignRepo.save({ name: 'SoldOut', total: 1, redeemed: 1 });
-      const res = await post(`/campaigns/${campaign.id}/redeem`, { userId: crypto.randomUUID(), idempotencyKey: crypto.randomUUID() }).expect(
-        HttpStatus.OK,
-      );
+      const res = await request(testApp.application.getHttpServer())
+        .post(`/campaigns/${campaign.id}/redeem`)
+        .send({ userId: crypto.randomUUID(), idempotencyKey: crypto.randomUUID() })
+        .expect(HttpStatus.OK);
 
-      expect(res.body.status).toBe('SOLD_OUT');
+      expect(res.body.status).toBe(RedeemVoucherStatus.SOLD_OUT);
     });
 
     it('should handle concurrent redemption correctly', async () => {
@@ -124,16 +125,15 @@ describe('CampaignController (e2e)', () => {
 
       const results = await Promise.all(
         Array.from({ length: 10 }).map(() =>
-          post(`/campaigns/${campaign.id}/redeem`, {
-            userId: crypto.randomUUID(),
-            idempotencyKey: crypto.randomUUID(),
-          }),
+          request(testApp.application.getHttpServer())
+            .post(`/campaigns/${campaign.id}/redeem`)
+            .send({ userId: crypto.randomUUID(), idempotencyKey: crypto.randomUUID() }),
         ),
       );
 
       const statuses = results.map((r) => r.body.status);
-      const redeemed = statuses.filter((s) => s === 'REDEEMED').length;
-      const soldOut = statuses.filter((s) => s === 'SOLD_OUT').length;
+      const redeemed = statuses.filter((s) => s === RedeemVoucherStatus.REDEEMED).length;
+      const soldOut = statuses.filter((s) => s === RedeemVoucherStatus.SOLD_OUT).length;
 
       expect(redeemed).toBe(5);
       expect(soldOut).toBe(5);

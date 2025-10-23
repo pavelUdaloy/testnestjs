@@ -1,6 +1,6 @@
 import { CampaignEntity } from '@app-entities';
 
-export class CreateCampaignResponseDto {
+export class CampaignResponseDto {
   id: string;
   name: string;
   total: number;

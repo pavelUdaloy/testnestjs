@@ -35,7 +35,7 @@ export class TestApp {
               ssl: false,
               synchronize: true,
               type: 'postgres',
-              username: process.env.POSTGRES_USER,
+              username: process.env.POSTGRES_USERNAME,
             };
           },
         }),

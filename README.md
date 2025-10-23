@@ -3,14 +3,30 @@
 NestJS service for managing voucher campaigns with guaranteed concurrency safety and idempotent operations.
 
 ---
-
 # Installation & Running
-## Start the application
-```docker-compose up app postgres```
+```
+npm ci
+docker-compose up -d postgres
+npm run migration:up 
+npm run start:dev
+```
+# 🧪 Run E2E tests
+```docker-compose -f docker-compose.yml run --rm node-runner npm run test:e2e --runInBand```
 
-## Run database migrations
-```docker-compose run --rm node-runner npm run migration:up```
+# 🧪 Run K6 Tests
 
+```
+npm run start:dev
+npm run load:500
+```
+# 📈 K6 Metric Results
+```
+Requests	74261
+Error Rate	0%
+99th Percentile	493ms
+Throughput	352 req/s
+Max Users	500 VUs
+```
 # 📡 API Endpoints
 ```Create Campaign
 Create Campaign
@@ -75,25 +91,6 @@ Safe for retries without double-spending
 
 ✅ Remaining vouchers never go negative
 
-# 🧪 Run E2E tests
-```docker-compose -f docker-compose.yml run --rm node-runner```
-
-# 🧪 Run K6 Tests
-
-```
-cd k6
-npm install && npm run build
-npm run load    # Load test (50-100 users)
-npm run stress  # Stress test (100-200 users)
-```
-# 📈 K6 Metric Results
-```
-Requests	272,084
-Error Rate	0%
-99th Percentile	893ms
-Throughput	283 req/s
-Max Users	200 VUs
-```
 # 🛠️ Tech Stack
 ```
 Framework: NestJS 11

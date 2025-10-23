@@ -1,8 +1,7 @@
+import { CampaignEntity, CampaignVoucherRedeemEntity } from '@app-entities';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-
-import { CampaignEntity, CampaignVoucherRedeemEntity } from '@app-entities';
 
 import { CreateCampaignRequestDto, RedeemVoucherRequestDto } from './request-dto';
 
